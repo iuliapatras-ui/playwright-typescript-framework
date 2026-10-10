@@ -6,7 +6,7 @@ UI and API test automation for the [Practice Software Testing Toolshop](https://
 a demo web shop built for testers (Angular front end + REST API), written with
 [Playwright Test](https://playwright.dev) and TypeScript.
 
-**45 tests, 93 test runs per full run:** 21 API tests, plus 24 UI tests on Chromium, Firefox and WebKit.
+**47 tests, 95 test runs per full run:** 23 API tests, plus 24 UI tests on Chromium, Firefox and WebKit.
 
 | Area           | What is tested                                                                                           |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
@@ -15,7 +15,7 @@ a demo web shop built for testers (Angular front end + REST API), written with
 | Product (UI)   | card vs. detail page, quantity, add to cart                                                              |
 | Checkout (UI)  | full order of two products (invoice number), cart maths, guest sign-in step, cart filled through the API |
 | Network (UI)   | mocked product list, empty list, 500 error; the requests the front end sends                             |
-| Auth (API)     | JWT login, `/users/me`, wrong password, missing and forged token                                         |
+| Auth (API) | registration, duplicate e-mail (409), JWT login, `/users/me`, wrong password, missing and forged token |
 | Products (API) | paging contract, no overlap between pages, by id, 404, search, sort, category filter                     |
 | Carts (API)    | create, add, change quantity, remove, 422 validation errors, the "one Thor Hammer" business rule, 404    |
 
@@ -59,23 +59,24 @@ API or UI is chosen with `--project` (`api`, `chromium`, `firefox`, `webkit`), n
 All settings are in [`src/config/env.ts`](src/config/env.ts), with defaults for the public demo.
 Override them with environment variables or a local `.env` file (copy [`.env.example`](.env.example)):
 
-| Variable                               | Default                                   |
-| -------------------------------------- | ----------------------------------------- |
-| `BASE_URL`                             | `https://practicesoftwaretesting.com`     |
-| `API_URL`                              | `https://api.practicesoftwaretesting.com` |
-| `CUSTOMER_EMAIL` / `CUSTOMER_PASSWORD` | the demo's published customer account     |
+| Variable   | Default                                   |
+| ---------- | ----------------------------------------- |
+| `BASE_URL` | `https://practicesoftwaretesting.com`     |
+| `API_URL`  | `https://api.practicesoftwaretesting.com` |
+
+No credentials to configure: every test worker registers its own customer through the API (see "Own test data" below).
 
 ## Project structure
 
 ```
 src/
-  config/env.ts            settings + test users (env vars, .env, defaults)
+  config/env.ts            settings (env vars, .env, defaults)
   pages/                   page objects: BasePage, HomePage, ProductPage, LoginPage, AccountPage, CheckoutPage
   components/              HeaderComponent (shared by every page: user menu, cart badge)
   api/                     AuthApi, ProductsApi, CartsApi (service objects) + schemas.ts (zod contracts)
-  fixtures/test.ts         the extended `test`: page objects, API clients, loggedInAs option
-  data/                    test data builders (mocked products, billing address)
-  utils/                   money (exact cents), sorting check
+  fixtures/test.ts         the extended `test`: page objects, API clients, testUser, loggedIn option
+  data/                    test data builders (new users, mocked products, billing address)
+  utils/                   step decorator, bot-check skip, money (exact cents), sorting check
 tests/
   api/                     *.api.spec.ts: no browser
   ui/                      *.spec.ts: run once per browser project
@@ -102,7 +103,7 @@ Passwords never go into a step title.
 what it needs (`async ({ homePage, cartsApi }) => ...`) and gets fresh objects for its own page. Fixtures are lazy, so an
 API test never starts a browser.
 
-**Login through the API, per test.** `test.use({ loggedInAs: 'customer' })` logs in with one API call and puts the JWT
+**Login through the API, per test.** `test.use({ loggedIn: true })` logs in with one API call and puts the JWT
 into `localStorage` before the page loads (`page.addInitScript`). It skips the login form (covered by its own tests) and
 gives every test a fresh token. A login saved once per run (`storageState`) was not an option: the shop's tokens expire
 after 5 minutes.
@@ -120,10 +121,18 @@ an empty list and a server error, and `waitForRequest` / `waitForResponse` to ch
 come from typed builders and pass through the real schema, so they cannot drift from the real API. One finding: the
 front end sends list filters in the body of an HTTP `QUERY` request, not in the URL.
 
-**A shared, live demo.** Other people use the same shop at the same time; during the build someone's tests added a
-product to the "Hammer" category. Tests therefore don't hard-code counts that others can change: the catalogue tests ask
-the API what to expect at run time, API tests create their own cart, and CI retries twice to tell a real failure from a
-network hiccup.
+**Own test data on a shared, live demo.** Other people use the same shop at the same time, and during the build the data
+changed under the tests three times: someone's tests added a product to the "Hammer" category, someone changed the name
+and password of the demo's published customer account, and this suite's own orders used up the stock of a product.
+So the tests own or look up everything they depend on:
+
+- **Users:** the `testUser` worker fixture registers a fresh customer through the API (unique `@example.com` address,
+  random password), one per worker process. Nobody else can change it.
+- **Products:** tests that buy something pick products that are in stock right now (`findInStockOnFirstPage()`).
+- **Counts:** the catalogue tests ask the API what to expect at run time instead of hard-coding numbers.
+- **Carts:** every API cart test creates its own cart.
+
+CI also retries twice, to tell a real failure from a network hiccup.
 
 **No fixed waits.** No `waitForTimeout` anywhere (an ESLint rule enforces it). Web-first assertions retry on their own,
 and where a list re-renders, `expect.poll()` re-reads it until it is right, e.g. the sort tests.
@@ -136,8 +145,8 @@ every test and throwing it away on success made each test about 25 seconds slowe
 
 ## Reports
 
-Playwright's HTML report (`npm run report`, or the `playwright-report` artifact of a CI run). A full local run, 93 of
-93 passed, API first:
+Playwright's HTML report (`npm run report`, or the `playwright-report` artifact of a CI run). A full local run, 95 of
+95 passed, API first:
 
 ![HTML report overview](docs/images/report-overview.png)
 
