@@ -36,7 +36,9 @@ export default defineConfig({
     // Evidence for failures only: keeps passing runs fast and the report small.
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Video only when a test is retried. 'retain-on-failure' records every test and
+    // encodes the video at teardown, which made each test ~25 s slower locally.
+    video: 'on-first-retry',
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },
