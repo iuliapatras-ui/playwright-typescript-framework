@@ -55,7 +55,8 @@ test.describe('Requests the front end sends', { tag: '@network' }, () => {
 
     // Start listening before the action that triggers the request, so it cannot be missed.
     const sortRequest = page.waitForRequest(
-      (request) => PRODUCT_LIST.test(request.url()) && request.postDataJSON()?.sort === 'price,asc',
+      (request) =>
+        PRODUCT_LIST.test(request.url()) && (request.postDataJSON() as { sort?: string } | null)?.sort === 'price,asc',
     );
     await homePage.sortBy('Price (Low - High)');
     const request = await sortRequest;

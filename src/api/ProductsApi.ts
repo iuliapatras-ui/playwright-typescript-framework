@@ -22,7 +22,7 @@ export class ProductsApi {
     if (query.byCategory) params.by_category = query.byCategory;
 
     const response = await this.request.get('/products', { params });
-    expect(response).toBeOK();
+    await expect(response).toBeOK();
     return ProductPageSchema.parse(await response.json());
   }
 
@@ -34,14 +34,14 @@ export class ProductsApi {
   /** GET /products/{id} for an id that must exist. */
   async getProduct(id: string): Promise<Product> {
     const response = await this.getById(id);
-    expect(response).toBeOK();
+    await expect(response).toBeOK();
     return ProductSchema.parse(await response.json());
   }
 
   /** GET /products/search?q=... */
   async search(term: string): Promise<ProductPage> {
     const response = await this.request.get('/products/search', { params: { q: term } });
-    expect(response).toBeOK();
+    await expect(response).toBeOK();
     return ProductPageSchema.parse(await response.json());
   }
 

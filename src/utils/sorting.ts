@@ -6,7 +6,9 @@ export type SortDirection = 'asc' | 'desc';
  */
 export function isSorted<T extends string | number>(values: readonly T[], direction: SortDirection): boolean {
   const compare = (a: T, b: T): number =>
-    typeof a === 'string' && typeof b === 'string' ? a.localeCompare(b, 'en', { sensitivity: 'base' }) : Number(a) - Number(b);
+    typeof a === 'string' && typeof b === 'string'
+      ? a.localeCompare(b, 'en', { sensitivity: 'base' })
+      : Number(a) - Number(b);
 
   // Every neighbour pair must be in order; equal neighbours are fine.
   return values.every((value, i) => {

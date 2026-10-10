@@ -56,7 +56,8 @@ test.describe('Products API', { tag: ['@api', '@products'] }, () => {
     test(`sort by price ${direction} is applied by the API`, async ({ productsApi }) => {
       const page = await productsApi.list({ sort: `price,${direction}` });
 
-      expect(isSorted(page.data.map((product) => product.price), direction)).toBe(true);
+      const prices = page.data.map((product) => product.price);
+      expect(isSorted(prices, direction), `prices ${prices.join(', ')}`).toBe(true);
     });
   }
 

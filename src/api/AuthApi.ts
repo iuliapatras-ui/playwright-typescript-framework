@@ -18,7 +18,7 @@ export class AuthApi {
   /** Logs in and returns just the access token (a JWT). Fails the test if the login fails. */
   async getAccessToken(email: string, password: string): Promise<string> {
     const response = await this.login(email, password);
-    expect(response, 'login should succeed').toBeOK();
+    await expect(response, 'login should succeed').toBeOK();
     // parse() checks the body against the schema and returns it typed.
     return LoginResponseSchema.parse(await response.json()).access_token;
   }
@@ -33,7 +33,7 @@ export class AuthApi {
   /** GET /users/me for a token that must be valid; returns the user. */
   async getCurrentUser(token: string): Promise<User> {
     const response = await this.me(token);
-    expect(response).toBeOK();
+    await expect(response).toBeOK();
     return UserSchema.parse(await response.json());
   }
 }

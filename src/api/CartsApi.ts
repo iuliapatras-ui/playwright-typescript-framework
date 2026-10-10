@@ -38,7 +38,7 @@ export class CartsApi {
   /** GET /carts/{id} for a cart that must exist; returns it checked against the schema. */
   async getCart(cartId: string): Promise<Cart> {
     const response = await this.getById(cartId);
-    expect(response).toBeOK();
+    await expect(response).toBeOK();
     return CartSchema.parse(await response.json());
   }
 }
