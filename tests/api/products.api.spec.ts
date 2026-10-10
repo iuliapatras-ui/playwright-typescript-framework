@@ -1,7 +1,7 @@
 import { expect, test } from '../../src/fixtures/test';
 import { isSorted } from '../../src/utils/sorting';
 
-test.describe('Products API', { tag: ['@api', '@products'] }, () => {
+test.describe('Products API', { tag: '@products' }, () => {
   test('first page matches the paging contract', { tag: '@smoke' }, async ({ productsApi }) => {
     // list() already validates every product against ProductSchema.
     const page = await productsApi.list();

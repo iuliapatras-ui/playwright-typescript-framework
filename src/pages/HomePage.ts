@@ -1,6 +1,7 @@
 import { type Locator, type Page, expect } from '@playwright/test';
 import { toCents } from '../utils/money';
 import { BasePage } from './BasePage';
+import { step } from '../utils/step';
 
 /** The sort options exactly as the drop-down shows them. */
 export type SortOption = 'Name (A - Z)' | 'Name (Z - A)' | 'Price (High - Low)' | 'Price (Low - High)';
@@ -36,26 +37,31 @@ export class HomePage extends BasePage {
   }
 
   /** Opens the catalogue and waits until the first page of products is shown. */
+  @step('Open the product catalogue')
   async open(): Promise<void> {
     await this.page.goto(HomePage.path);
     await expect(this.productCards.first()).toBeVisible();
   }
 
+  @step('Search for "{0}"')
   async search(term: string): Promise<void> {
     await this.searchInput.fill(term);
     await this.searchButton.click();
   }
 
+  @step('Sort by "{0}"')
   async sortBy(option: SortOption): Promise<void> {
     await this.sortDropdown.selectOption({ label: option });
   }
 
   /** Ticks a category or brand filter by its visible label, e.g. "Hammer". */
+  @step('Filter by "{0}"')
   async filterBy(label: string): Promise<void> {
     await this.page.getByLabel(label, { exact: true }).check();
   }
 
   /** Clicks the card whose name is exactly `name` ("Claw Hammer" must not match "Claw Hammer with ..."). */
+  @step('Open product "{0}"')
   async openProduct(name: string): Promise<void> {
     // Escape regex characters in the name, then anchor it so only the whole name matches.
     const exactName = new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);

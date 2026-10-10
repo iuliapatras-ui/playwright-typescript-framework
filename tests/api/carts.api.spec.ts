@@ -9,7 +9,7 @@ const test = base.extend<{ cartId: string }>({
   },
 });
 
-test.describe('Carts API', { tag: ['@api', '@carts'] }, () => {
+test.describe('Carts API', { tag: '@carts' }, () => {
   test('a new cart is empty', { tag: '@smoke' }, async ({ cartsApi, cartId }) => {
     const cart = await cartsApi.getCart(cartId);
 

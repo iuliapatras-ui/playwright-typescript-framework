@@ -1,5 +1,6 @@
 import { type Locator, type Page, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
+import { step } from '../utils/step';
 
 /** The sign-in page (/auth/login). */
 export class LoginPage extends BasePage {
@@ -24,22 +25,26 @@ export class LoginPage extends BasePage {
     this.passwordError = page.getByTestId('password-error');
   }
 
+  @step('Open the login page')
   async open(): Promise<void> {
     await this.page.goto(LoginPage.path);
   }
 
   /** Fills in the form and submits it. Does not check the result: callers decide what to expect. */
+  @step('Log in with the form as {0}')
   async login(email: string, password: string): Promise<void> {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
   }
 
+  @step('Check the login page is open')
   async expectOpen(): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`${LoginPage.path}$`));
     await expect(this.submitButton).toBeVisible();
   }
 
+  @step('Check the login error "{0}"')
   async expectLoginError(message: string): Promise<void> {
     await expect(this.loginError).toHaveText(message);
   }

@@ -4,7 +4,7 @@ import { expect, test } from '../../src/fixtures/test';
 
 const { customer } = users;
 
-test.describe('Auth API', { tag: ['@api', '@auth'] }, () => {
+test.describe('Auth API', { tag: '@auth' }, () => {
   test('valid login returns a bearer JWT', { tag: '@smoke' }, async ({ authApi }) => {
     const response = await authApi.login(customer.email, customer.password);
 

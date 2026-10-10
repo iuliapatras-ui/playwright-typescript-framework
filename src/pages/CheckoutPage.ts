@@ -1,6 +1,7 @@
 import { type Locator, type Page, expect } from '@playwright/test';
 import { toCents } from '../utils/money';
 import { BasePage } from './BasePage';
+import { step } from '../utils/step';
 
 /** Billing address for step 3. The shop looks up street and city from country + postal code. */
 export type BillingAddress = {
@@ -66,11 +67,13 @@ export class CheckoutPage extends BasePage {
     this.orderConfirmation = page.locator('#order-confirmation');
   }
 
+  @step('Open the checkout')
   async open(): Promise<void> {
     await this.page.goto(CheckoutPage.path);
   }
 
   /** Reads every cart row: title, quantity, unit price and line price (in cents). */
+  @step('Read the cart lines')
   async getCartLines(): Promise<CartLine[]> {
     await expect(this.cartRows.first()).toBeVisible();
     const lines: CartLine[] = [];
@@ -90,17 +93,20 @@ export class CheckoutPage extends BasePage {
   }
 
   /** Step 1 -> 2 */
+  @step('Checkout step 1: proceed from the cart')
   async proceedFromCart(): Promise<void> {
     await this.proceedFromCartButton.click();
   }
 
   /** Step 2 -> 3, for a customer who is already logged in. */
+  @step('Checkout step 2: continue as the logged-in customer')
   async proceedAsLoggedInCustomer(): Promise<void> {
     await expect(this.alreadyLoggedInMessage).toBeVisible();
     await this.proceedFromSignInButton.click();
   }
 
   /** Step 3 -> 4 */
+  @step('Checkout step 3: enter the billing address')
   async enterBillingAddress(address: BillingAddress): Promise<void> {
     await this.countrySelect.selectOption({ label: address.country });
     await this.postalCodeInput.fill(address.postalCode);
@@ -111,6 +117,7 @@ export class CheckoutPage extends BasePage {
   }
 
   /** Step 4: choose a payment method, have it checked, then confirm the order. */
+  @step('Checkout step 4: pay with {0}')
   async payWith(method: PaymentMethod): Promise<void> {
     await this.paymentMethodSelect.selectOption({ label: method });
     await this.finishButton.click();
@@ -119,6 +126,7 @@ export class CheckoutPage extends BasePage {
   }
 
   /** Checks the confirmation and returns the invoice number, e.g. "INV-2026000005". */
+  @step('Check the order is confirmed')
   async expectOrderConfirmed(): Promise<string> {
     await expect(this.orderConfirmation).toContainText('Thanks for your order!');
     const invoiceNumber = (await this.orderConfirmation.locator('span').innerText()).trim();

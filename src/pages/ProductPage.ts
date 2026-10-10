@@ -1,6 +1,7 @@
 import { type Locator, type Page, expect } from '@playwright/test';
 import { toCents } from '../utils/money';
 import { BasePage } from './BasePage';
+import { step } from '../utils/step';
 
 /** A product's detail page (/product/{id}): name, price, quantity and "Add to cart". */
 export class ProductPage extends BasePage {
@@ -26,15 +27,18 @@ export class ProductPage extends BasePage {
     this.toast = page.getByRole('alert');
   }
 
+  @step('Open product page {0}')
   async open(productId: string): Promise<void> {
     await this.page.goto(`/product/${productId}`);
     await expect(this.addToCartButton).toBeVisible();
   }
 
+  @step('Set the quantity to {0}')
   async setQuantity(quantity: number): Promise<void> {
     await this.quantityInput.fill(String(quantity));
   }
 
+  @step('Add the product to the cart')
   async addToCart(): Promise<void> {
     await this.addToCartButton.click();
     // Wait for the shop to confirm, so the next step sees the updated cart.
@@ -45,6 +49,7 @@ export class ProductPage extends BasePage {
     return toCents(await this.unitPrice.innerText());
   }
 
+  @step('Check the product page shows "{0}"')
   async expectOpenFor(productName: string): Promise<void> {
     await expect(this.page).toHaveURL(/\/product\/\w+/);
     await expect(this.name).toHaveText(productName);
