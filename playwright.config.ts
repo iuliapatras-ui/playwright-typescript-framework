@@ -23,8 +23,15 @@ export default defineConfig({
   timeout: 45_000,
   expect: { timeout: 10_000 },
 
+  // On CI every job writes a blob report (named after the job, so they don't collide);
+  // a final job merges them into one HTML report for all browsers. Locally: list + HTML.
   reporter: env.isCI
-    ? [['github'], ['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }]]
+    ? [
+        ['github'],
+        ['list'],
+        ['blob', { fileName: `report-${process.env.BLOB_NAME ?? 'all'}.zip` }],
+        ['junit', { outputFile: 'test-results/junit.xml' }],
+      ]
     : [['list'], ['html', { open: 'never' }]],
 
   use: {

@@ -1,0 +1,105 @@
+# Continuous integration: static checks first, then API and UI tests in parallel jobs,
+# then one merged HTML report for the whole run.
+#
+# Runs on every push and pull request to main, by hand (Actions tab -> Run workflow),
+# and every night: the shop under test is a public demo that can change without any
+# commit here, so a nightly run notices that on its own.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *' # 04:00 UTC every day
+
+# A newer push to the same branch cancels the run that is still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Typecheck, lint, format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm # reuses downloaded packages between runs (keyed on package-lock.json)
+      - run: npm ci
+      - run: npm run check
+
+  tests:
+    name: Tests (${{ matrix.project }})
+    needs: checks # no point starting browsers if the code does not even compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false # one browser failing should not cancel the others
+      matrix:
+        project: [api, chromium, firefox, webkit]
+    env:
+      # Names this job's blob report (see playwright.config.ts).
+      BLOB_NAME: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      # Only the browser this job needs (with its system libraries); the API job needs none.
+      - name: Install ${{ matrix.project }}
+        if: matrix.project != 'api'
+        run: npx playwright install --with-deps ${{ matrix.project }}
+
+      - name: Run tests
+        run: npx playwright test --project=${{ matrix.project }}
+
+      # Upload even when tests failed: that is exactly when the report is needed.
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.project }}
+          path: blob-report
+          retention-days: 3
+
+  report:
+    name: Merge HTML report
+    needs: tests
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      # One HTML report with every project (api, chromium, firefox, webkit) of this run.
+      - name: Merge into one HTML report
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
