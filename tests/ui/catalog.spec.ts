@@ -15,11 +15,14 @@ test.describe('Product catalogue', { tag: '@catalog' }, () => {
     await expect(homePage.productPrices).toHaveCount(9);
   });
 
-  test('search shows only matching products', { tag: '@smoke' }, async ({ homePage }) => {
+  test('search shows only matching products', { tag: '@smoke' }, async ({ homePage, productsApi }) => {
+    // The demo is shared and its data can change, so the expected count comes from the API now.
+    const expected = await productsApi.search('pliers');
+
     await homePage.search('pliers');
 
-    await expect(homePage.searchResultCount).toHaveText("4 products found for 'pliers'");
-    await expect(homePage.productCards).toHaveCount(4);
+    await expect(homePage.searchResultCount).toHaveText(`${expected.total} products found for 'pliers'`);
+    await expect(homePage.productCards).toHaveCount(expected.data.length);
     for (const name of await homePage.getProductNames()) {
       expect(name, 'every result should mention the search term').toMatch(/pliers/i);
     }
@@ -32,14 +35,17 @@ test.describe('Product catalogue', { tag: '@catalog' }, () => {
     await expect(homePage.productCards).toHaveCount(0);
   });
 
-  test('category filter shows only that category', async ({ homePage }) => {
-    await homePage.filterBy('Hammer');
+  test('category filter shows the same products as the API', async ({ homePage, productsApi }) => {
+    // Other people's tests add products to the shared demo (e.g. into "Hammer"), so neither
+    // a fixed count nor "every name contains hammer" holds. The API is the source of truth.
+    const hammer = await productsApi.findByName('Claw Hammer');
+    const expected = await productsApi.list({ byCategory: hammer.category.id });
+    const expectedNames = expected.data.map((product) => product.name).sort();
 
-    // The grid reloads after the click; wait until it holds hammers only (7 products).
-    await expect(homePage.productCards).toHaveCount(7);
-    for (const name of await homePage.getProductNames()) {
-      expect(name).toMatch(/hammer/i);
-    }
+    await homePage.filterBy(hammer.category.name);
+
+    // The grid reloads after the click; re-read it until it shows the category's products.
+    await expect.poll(async () => (await homePage.getProductNames()).sort()).toEqual(expectedNames);
   });
 
   // One test per sort option, generated from this table.
