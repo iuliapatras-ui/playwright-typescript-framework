@@ -15,7 +15,7 @@ a demo web shop built for testers (Angular front end + REST API), written with
 | Product (UI)   | card vs. detail page, quantity, add to cart                                                              |
 | Checkout (UI)  | full order of two products (invoice number), cart maths, guest sign-in step, cart filled through the API |
 | Network (UI)   | mocked product list, empty list, 500 error; the requests the front end sends                             |
-| Auth (API) | registration, duplicate e-mail (409), JWT login, `/users/me`, wrong password, missing and forged token |
+| Auth (API)     | registration, duplicate e-mail (409), JWT login, `/users/me`, wrong password, missing and forged token   |
 | Products (API) | paging contract, no overlap between pages, by id, 404, search, sort, category filter                     |
 | Carts (API)    | create, add, change quantity, remove, 422 validation errors, the "one Thor Hammer" business rule, 404    |
 
