@@ -1,16 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import { env } from './src/config/env';
 
-/** Where the setup project saves the logged-in customer's cookies and local storage. */
-export const CUSTOMER_STORAGE_STATE = '.auth/customer.json';
-
 /**
  * Projects:
- *  - setup:    logs the customer in once and saves the session (tests/auth.setup.ts)
  *  - api:      REST API tests, no browser at all
  *  - chromium, firefox, webkit: the UI tests, once per browser engine
  *
  * Run one project with --project, e.g.  npx playwright test --project=chromium
+ * Tests that need a logged-in user get it through the API per test
+ * (test.use({ loggedInAs: 'customer' }), see src/fixtures/test.ts), so there is no setup project.
  */
 export default defineConfig({
   testDir: './tests',
@@ -45,11 +43,6 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'setup',
-      testMatch: /.*\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
       name: 'api',
       testDir: './tests/api',
       // No browser settings: API tests use the apiRequest fixture (bound to env.apiUrl).
@@ -58,19 +51,16 @@ export default defineConfig({
       name: 'chromium',
       testDir: './tests/ui',
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
     },
     {
       name: 'firefox',
       testDir: './tests/ui',
       use: { ...devices['Desktop Firefox'] },
-      dependencies: ['setup'],
     },
     {
       name: 'webkit',
       testDir: './tests/ui',
       use: { ...devices['Desktop Safari'] },
-      dependencies: ['setup'],
     },
   ],
 });

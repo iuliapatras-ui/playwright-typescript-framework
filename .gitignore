@@ -1,11 +1,10 @@
 # Dependencies
 node_modules/
 
-# Playwright output: HTML report, traces/screenshots/videos, blob reports, saved logins
+# Playwright output: HTML report, traces/screenshots/videos, blob reports
 playwright-report/
 test-results/
 blob-report/
-.auth/
 
 # Local settings (copy .env.example to .env)
 .env
