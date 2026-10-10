@@ -1,0 +1,29 @@
+{
+  "name": "playwright-typescript-framework",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UI and API test automation with Playwright and TypeScript for the Practice Software Testing Toolshop",
+  "author": "Niranjan Kumar Agri",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:headed": "playwright test --project=chromium --headed",
+    "test:ui-mode": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2"
+  }
+}
