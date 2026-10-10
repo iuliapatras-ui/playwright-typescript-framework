@@ -52,8 +52,7 @@ export default defineConfig({
     {
       name: 'api',
       testDir: './tests/api',
-      // API tests talk to the API host, not the web shop.
-      use: { baseURL: env.apiUrl, extraHTTPHeaders: { Accept: 'application/json' } },
+      // No browser settings: API tests use the apiRequest fixture (bound to env.apiUrl).
     },
     {
       name: 'chromium',
