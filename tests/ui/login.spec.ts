@@ -8,12 +8,15 @@ test.describe('Login', { tag: '@login' }, () => {
     await loginPage.open();
   });
 
-  test('customer can log in and lands on the account page', { tag: '@smoke' }, async ({ loginPage, accountPage }) => {
+  test('customer can log in', { tag: '@smoke' }, async ({ loginPage, accountPage, homePage }) => {
     await loginPage.login(customer.email, customer.password);
 
-    await accountPage.expectOpen();
-    // The header switches from "Sign in" to the user's name.
-    await accountPage.header.expectLoggedInAs(customer.fullName);
+    // The shop redirects to /account after a successful login.
+    await accountPage.expectRedirectedHere();
+    // Proof that the session is real: another page shows the user's name in the header.
+    // (Not the account page itself: see the note in AccountPage.ts about the bot check on CI.)
+    await homePage.open();
+    await homePage.header.expectLoggedInAs(customer.fullName);
   });
 
   test('wrong password is rejected with a message', { tag: '@negative' }, async ({ loginPage }) => {
@@ -32,13 +35,17 @@ test.describe('Login', { tag: '@login' }, () => {
     await expect(loginPage.passwordError).toHaveText('Password is required');
   });
 
-  test('customer can sign out again', async ({ loginPage, accountPage }) => {
+  test('customer can sign out again', async ({ loginPage, accountPage, homePage }) => {
     await loginPage.login(customer.email, customer.password);
-    await accountPage.expectOpen();
+    await accountPage.expectRedirectedHere();
+    await homePage.open();
 
-    await accountPage.header.signOut();
+    await homePage.header.signOut();
 
-    await loginPage.expectOpen();
-    await loginPage.header.expectLoggedOut();
+    // The header switches back to "Sign in" right away...
+    await homePage.header.expectLoggedOut();
+    // ...and the session is really gone: a fresh page load is still logged out.
+    await homePage.open();
+    await homePage.header.expectLoggedOut();
   });
 });

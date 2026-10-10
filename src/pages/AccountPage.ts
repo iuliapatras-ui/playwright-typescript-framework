@@ -1,26 +1,24 @@
-import { type Locator, type Page, expect } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { step } from '../utils/step';
 
-/** "My account" overview (/account), where a successful login lands. */
+/**
+ * "My account" (/account), where a successful login redirects to.
+ *
+ * Only the URL is checked, not the page content: from CI runners (data-centre IPs) the
+ * site's Cloudflare protection answers /account with a "Performing security verification"
+ * bot check instead of the page. Other pages are not affected, so tests confirm the login
+ * through the header on the home page instead (see tests/ui/login.spec.ts).
+ */
 export class AccountPage extends BasePage {
   static readonly path = '/account';
 
-  readonly pageTitle: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.pageTitle = page.getByTestId('page-title');
   }
 
-  @step('Open the account page')
-  async open(): Promise<void> {
-    await this.page.goto(AccountPage.path);
-  }
-
-  @step('Check the account page is open')
-  async expectOpen(): Promise<void> {
+  @step('Check the login redirected to the account page')
+  async expectRedirectedHere(): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`${AccountPage.path}$`));
-    await expect(this.pageTitle).toHaveText('My account');
   }
 }
