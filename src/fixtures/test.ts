@@ -2,7 +2,8 @@ import { type APIRequestContext, type Page, test as base } from '@playwright/tes
 import { AuthApi } from '../api/AuthApi';
 import { CartsApi } from '../api/CartsApi';
 import { ProductsApi } from '../api/ProductsApi';
-import { env, users } from '../config/env';
+import { env } from '../config/env';
+import { buildNewUser, type TestUser } from '../data/users';
 import { AccountPage } from '../pages/AccountPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { HomePage } from '../pages/HomePage';
@@ -12,10 +13,21 @@ import { ProductPage } from '../pages/ProductPage';
 /** Settings a test file can change with test.use(...). */
 type Options = {
   /**
-   * Start the test already logged in as this user, e.g. test.use({ loggedInAs: 'customer' }).
+   * Start the test already logged in as `testUser`: test.use({ loggedIn: true }).
    * Default: not logged in.
    */
-  loggedInAs: keyof typeof users | undefined;
+  loggedIn: boolean;
+};
+
+/** Created once per worker process and shared by that worker's tests. */
+type WorkerFixtures = {
+  /**
+   * A customer account registered through the API for this worker. Ours alone: the demo's
+   * published accounts are shared with everyone, and others changed their name and password
+   * while this suite was running. One per worker (not per test) keeps the number of accounts
+   * created on the public demo small.
+   */
+  testUser: TestUser;
 };
 
 /** The page objects every UI test can ask for by name. */
@@ -45,17 +57,34 @@ const AUTH_TOKEN_KEY = 'auth-token';
  * creates exactly those objects for that test, lazily: an API test never starts a
  * browser because it never asks for `page`. Nothing is shared between tests.
  */
-export const test = base.extend<Options & PageFixtures & ApiFixtures>({
-  loggedInAs: [undefined, { option: true }],
+export const test = base.extend<Options & PageFixtures & ApiFixtures, WorkerFixtures>({
+  loggedIn: [false, { option: true }],
+
+  testUser: [
+    async ({ playwright }, use) => {
+      // Worker fixtures can't use the test-scoped apiRequest, so this one has its own context.
+      const request = await playwright.request.newContext({
+        baseURL: env.apiUrl,
+        extraHTTPHeaders: { Accept: 'application/json' },
+      });
+      const user = buildNewUser();
+      const response = await new AuthApi(request).register(user);
+      if (response.status() !== 201) {
+        throw new Error(`Registering the test user failed: ${response.status()} ${await response.text()}`);
+      }
+      await request.dispose();
+      await use(user);
+    },
+    { scope: 'worker' },
+  ],
 
   // Wraps the built-in page: when the test wants a logged-in user, log in through the API
   // and put the token where the front end looks for it, before any page script runs.
   // Faster than the login form, and a fresh token per test: the shop's tokens live only
   // 5 minutes, so a login saved once per run (storageState) would expire in long runs.
-  page: async ({ page, loggedInAs, authApi }, use) => {
-    if (loggedInAs) {
-      const { email, password } = users[loggedInAs];
-      const token = await authApi.getAccessToken(email, password);
+  page: async ({ page, loggedIn, testUser, authApi }, use) => {
+    if (loggedIn) {
+      const token = await authApi.getAccessToken(testUser.email, testUser.password);
       await page.addInitScript(([key, value]) => window.localStorage.setItem(key, value), [AUTH_TOKEN_KEY, token]);
     }
     await use(page);

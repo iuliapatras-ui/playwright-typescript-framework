@@ -1,9 +1,7 @@
-import { users } from '../../src/config/env';
 import { expect, test } from '../../src/fixtures/test';
 import { skipIfBotCheck } from '../../src/utils/botCheck';
 
-const { customer } = users;
-
+// testUser: a customer this worker registered through the API (see src/fixtures/test.ts).
 test.describe('Login', { tag: '@login' }, () => {
   test.beforeEach(async ({ loginPage }) => {
     await loginPage.open();
@@ -12,8 +10,8 @@ test.describe('Login', { tag: '@login' }, () => {
   test(
     'customer can log in and lands on the account page',
     { tag: '@smoke' },
-    async ({ page, loginPage, accountPage }) => {
-      await loginPage.login(customer.email, customer.password);
+    async ({ page, loginPage, accountPage, testUser }) => {
+      await loginPage.login(testUser.email, testUser.password);
 
       // The redirect alone proves the server accepted the login.
       await accountPage.expectRedirectedHere();
@@ -21,12 +19,12 @@ test.describe('Login', { tag: '@login' }, () => {
       await skipIfBotCheck(page, accountPage.pageTitle);
       await accountPage.expectOpen();
       // The header switches from "Sign in" to the user's name.
-      await accountPage.header.expectLoggedInAs(customer.fullName);
+      await accountPage.header.expectLoggedInAs(testUser.fullName);
     },
   );
 
-  test('wrong password is rejected with a message', { tag: '@negative' }, async ({ loginPage }) => {
-    await loginPage.login(customer.email, 'not-the-password');
+  test('wrong password is rejected with a message', { tag: '@negative' }, async ({ loginPage, testUser }) => {
+    await loginPage.login(testUser.email, 'not-the-password');
 
     await loginPage.expectLoginError('Invalid email or password');
     // Still on the login page, still logged out.
@@ -41,8 +39,8 @@ test.describe('Login', { tag: '@login' }, () => {
     await expect(loginPage.passwordError).toHaveText('Password is required');
   });
 
-  test('customer can sign out again', async ({ page, loginPage, accountPage, homePage }) => {
-    await loginPage.login(customer.email, customer.password);
+  test('customer can sign out again', async ({ page, loginPage, accountPage, homePage, testUser }) => {
+    await loginPage.login(testUser.email, testUser.password);
     await accountPage.expectRedirectedHere();
     await skipIfBotCheck(page, accountPage.pageTitle);
     await accountPage.expectOpen();

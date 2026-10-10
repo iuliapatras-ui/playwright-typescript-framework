@@ -53,4 +53,20 @@ export class ProductsApi {
     }
     return match;
   }
+
+  /**
+   * Returns `count` products from the first catalogue page (the one the home page shows)
+   * that are in stock right now. The demo's stock changes (orders, including this suite's
+   * own end-to-end test, use it up), so tests that buy something pick their products here
+   * instead of hard-coding names. Thor Hammer is left out: only one fits in a cart.
+   */
+  async findInStockOnFirstPage(count: number): Promise<Product[]> {
+    const available = (await this.list()).data.filter(
+      (product) => product.in_stock && !product.is_rental && product.name !== 'Thor Hammer',
+    );
+    if (available.length < count) {
+      throw new Error(`Only ${available.length} products in stock on the first page, ${count} needed`);
+    }
+    return available.slice(0, count);
+  }
 }

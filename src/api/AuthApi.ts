@@ -1,4 +1,5 @@
 import { type APIRequestContext, type APIResponse, expect } from '@playwright/test';
+import type { TestUser } from '../data/users';
 import { LoginResponseSchema, type User, UserSchema } from './schemas';
 
 /**
@@ -9,6 +10,21 @@ import { LoginResponseSchema, type User, UserSchema } from './schemas';
  */
 export class AuthApi {
   constructor(private readonly request: APIRequestContext) {}
+
+  /** POST /users/register: creates a customer account. Returns the raw response (201 on success). */
+  async register(user: TestUser): Promise<APIResponse> {
+    return this.request.post('/users/register', {
+      data: {
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email,
+        password: user.password,
+        dob: '1990-01-01',
+        phone: '0123456789',
+        address: { street: 'Stephansplatz 1', city: 'Vienna', state: 'Vienna', country: 'AT', postal_code: '1010' },
+      },
+    });
+  }
 
   /** POST /users/login. Returns the raw response, so negative tests can check the status. */
   async login(email: string, password: string): Promise<APIResponse> {

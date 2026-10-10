@@ -29,14 +29,6 @@ export const env = {
   isCI: Boolean(process.env.CI),
 } as const;
 
-/**
- * Test users. Toolshop publishes them on its documentation page; they are not secrets,
- * but they can still be replaced through environment variables.
- */
-export const users = {
-  customer: {
-    email: read('CUSTOMER_EMAIL', 'customer@practicesoftwaretesting.com'),
-    password: read('CUSTOMER_PASSWORD', 'welcome01'),
-    fullName: 'Jane Doe',
-  },
-} as const;
+// No shared test users here: each worker registers its own customer (see the testUser
+// fixture in src/fixtures/test.ts), because the demo's published accounts are changed by
+// other people while tests run.

@@ -15,9 +15,11 @@ test.describe('Product details', { tag: '@product' }, () => {
     await expect(productPage.description).not.toBeEmpty();
   });
 
-  test('adding a product with a quantity updates the cart badge', async ({ homePage, productPage }) => {
+  test('adding a product with a quantity updates the cart badge', async ({ homePage, productPage, productsApi }) => {
+    // Out-of-stock products can't be added, and the demo's stock changes: pick one in stock now.
+    const [product] = await productsApi.findInStockOnFirstPage(1);
     await homePage.open();
-    await homePage.openProduct('Claw Hammer');
+    await homePage.openProduct(product.name);
 
     await productPage.setQuantity(3);
     await productPage.addToCart();

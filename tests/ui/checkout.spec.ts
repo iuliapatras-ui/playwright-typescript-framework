@@ -1,22 +1,24 @@
-import { users } from '../../src/config/env';
 import { viennaAddress } from '../../src/data/checkout';
 import { expect, test, useCartInBrowser } from '../../src/fixtures/test';
 
 test.describe('Checkout as a logged-in customer', { tag: '@checkout' }, () => {
   // Logged in through the API before the page loads (see the page fixture).
-  test.use({ loggedInAs: 'customer' });
+  test.use({ loggedIn: true });
 
   test(
     'customer can order two products',
     { tag: ['@smoke', '@e2e'] },
-    async ({ homePage, productPage, checkoutPage }) => {
+    async ({ homePage, productPage, checkoutPage, productsApi, testUser }) => {
+      // Ordering uses up the shared demo's stock, so pick two products that are in stock now.
+      const [first, second] = await productsApi.findInStockOnFirstPage(2);
+
       // Products: two different products into the cart.
       await homePage.open();
-      await homePage.header.expectLoggedInAs(users.customer.fullName);
-      await homePage.openProduct('Claw Hammer');
+      await homePage.header.expectLoggedInAs(testUser.fullName);
+      await homePage.openProduct(first.name);
       await productPage.addToCart();
       await homePage.open();
-      await homePage.openProduct('Combination Pliers');
+      await homePage.openProduct(second.name);
       await productPage.setQuantity(2);
       await productPage.addToCart();
       await productPage.header.expectCartQuantity(3);
@@ -25,8 +27,8 @@ test.describe('Checkout as a logged-in customer', { tag: '@checkout' }, () => {
       await productPage.header.openCart();
       const lines = await checkoutPage.getCartLines();
       expect(lines.map(({ title, quantity }) => ({ title, quantity }))).toEqual([
-        { title: 'Claw Hammer', quantity: 1 },
-        { title: 'Combination Pliers', quantity: 2 },
+        { title: first.name, quantity: 1 },
+        { title: second.name, quantity: 2 },
       ]);
 
       // Steps 2-4: sign-in (already done), address, payment.
@@ -39,13 +41,14 @@ test.describe('Checkout as a logged-in customer', { tag: '@checkout' }, () => {
     },
   );
 
-  test('cart line prices and total add up', async ({ homePage, productPage, checkoutPage }) => {
+  test('cart line prices and total add up', async ({ homePage, productPage, checkoutPage, productsApi }) => {
+    const [first, second] = await productsApi.findInStockOnFirstPage(2);
     await homePage.open();
-    await homePage.openProduct('Slip Joint Pliers');
+    await homePage.openProduct(first.name);
     await productPage.setQuantity(3);
     await productPage.addToCart();
     await homePage.open();
-    await homePage.openProduct('Bolt Cutters');
+    await homePage.openProduct(second.name);
     await productPage.addToCart();
 
     await productPage.header.openCart();
