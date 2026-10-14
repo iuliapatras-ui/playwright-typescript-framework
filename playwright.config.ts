@@ -8,7 +8,7 @@ import { env } from './src/config/env';
  *
  * Run one project with --project, e.g.  npx playwright test --project=chromium
  * Tests that need a logged-in user get it through the API per test
- * (test.use({ loggedInAs: 'customer' }), see src/fixtures/test.ts), so there is no setup project.
+ * (test.use({ loggedIn: true }), see src/fixtures/test.ts), so there is no setup project.
  */
 export default defineConfig({
   testDir: './tests',
