@@ -6,6 +6,7 @@ import { type Cart, CartSchema } from './schemas';
  * Carts are anonymous: whoever knows the cart id can use it, no token needed.
  */
 export class CartsApi {
+  /** request is Playwright's API client with the API base URL from the config. */
   constructor(private readonly request: APIRequestContext) {}
 
   /** POST /carts. Returns the id of a new, empty cart. */

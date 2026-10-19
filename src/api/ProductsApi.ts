@@ -12,6 +12,7 @@ export type ProductQuery = {
 
 /** Service object for the product endpoints (/products...). */
 export class ProductsApi {
+  /** request is Playwright's API client with the API base URL from the config. */
   constructor(private readonly request: APIRequestContext) {}
 
   /** GET /products with paging, sorting and filtering. Returns one page, checked against the schema. */

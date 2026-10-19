@@ -9,6 +9,7 @@ import { LoginResponseSchema, type User, UserSchema } from './schemas';
  * headers or bodies themselves.
  */
 export class AuthApi {
+  /** request is Playwright's API client with the API base URL from the config. */
   constructor(private readonly request: APIRequestContext) {}
 
   /** POST /users/register: creates a customer account. Returns the raw response (201 on success). */

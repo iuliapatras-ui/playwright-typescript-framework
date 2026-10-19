@@ -43,6 +43,9 @@ export class CheckoutPage extends BasePage {
   readonly paymentSuccessMessage: Locator;
   readonly orderConfirmation: Locator;
 
+  /**
+   * Builds the locators once; Playwright locators are lazy, so nothing is looked up until a step uses them.
+   */
   constructor(page: Page) {
     super(page);
     // A cart row is the table row that holds a product title.
@@ -67,6 +70,7 @@ export class CheckoutPage extends BasePage {
     this.orderConfirmation = page.locator('#order-confirmation');
   }
 
+  /** Opens the checkout at the cart step. */
   @step('Open the checkout')
   async open(): Promise<void> {
     await this.page.goto(CheckoutPage.path);
@@ -88,6 +92,7 @@ export class CheckoutPage extends BasePage {
     return lines;
   }
 
+  /** The cart total in cents, so sums are compared without rounding errors. */
   async getCartTotalCents(): Promise<number> {
     return toCents(await this.cartTotal.innerText());
   }

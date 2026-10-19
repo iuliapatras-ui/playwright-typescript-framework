@@ -22,6 +22,9 @@ export class HomePage extends BasePage {
   readonly productNames: Locator;
   readonly productPrices: Locator;
 
+  /**
+   * Builds the locators once; Playwright locators are lazy, so nothing is looked up until a step uses them.
+   */
   constructor(page: Page) {
     super(page);
     this.searchInput = page.getByTestId('search-query');
@@ -43,12 +46,14 @@ export class HomePage extends BasePage {
     await expect(this.productCards.first()).toBeVisible();
   }
 
+  /** Types a search term and submits it. */
   @step('Search for "{0}"')
   async search(term: string): Promise<void> {
     await this.searchInput.fill(term);
     await this.searchButton.click();
   }
 
+  /** Chooses a sort order by its visible label. */
   @step('Sort by "{0}"')
   async sortBy(option: SortOption): Promise<void> {
     await this.sortDropdown.selectOption({ label: option });
@@ -68,6 +73,7 @@ export class HomePage extends BasePage {
     await this.productNames.filter({ hasText: exactName }).click();
   }
 
+  /** The product names of the cards in grid order, trimmed. */
   async getProductNames(): Promise<string[]> {
     return (await this.productNames.allInnerTexts()).map((name) => name.trim());
   }

@@ -15,6 +15,9 @@ export class LoginPage extends BasePage {
   readonly emailError: Locator;
   readonly passwordError: Locator;
 
+  /**
+   * Builds the locators once; Playwright locators are lazy, so nothing is looked up until a step uses them.
+   */
   constructor(page: Page) {
     super(page);
     this.emailInput = page.getByTestId('email');
@@ -25,6 +28,7 @@ export class LoginPage extends BasePage {
     this.passwordError = page.getByTestId('password-error');
   }
 
+  /** Opens the login page. */
   @step('Open the login page')
   async open(): Promise<void> {
     await this.page.goto(LoginPage.path);
@@ -38,12 +42,14 @@ export class LoginPage extends BasePage {
     await this.submitButton.click();
   }
 
+  /** Checks the URL and that the form can be submitted. */
   @step('Check the login page is open')
   async expectOpen(): Promise<void> {
     await expect(this.page).toHaveURL(new RegExp(`${LoginPage.path}$`));
     await expect(this.submitButton).toBeVisible();
   }
 
+  /** Checks the error the server sent back under the form. */
   @step('Check the login error "{0}"')
   async expectLoginError(message: string): Promise<void> {
     await expect(this.loginError).toHaveText(message);

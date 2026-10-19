@@ -10,6 +10,7 @@ import { HeaderComponent } from '../components/HeaderComponent';
 export abstract class BasePage {
   readonly header: HeaderComponent;
 
+  /** Only subclasses create page objects; each one gets the shared header component. */
   protected constructor(protected readonly page: Page) {
     this.header = new HeaderComponent(page);
   }

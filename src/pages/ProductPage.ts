@@ -15,6 +15,9 @@ export class ProductPage extends BasePage {
   /** The pop-up message the shop shows after an action, e.g. "Product added to shopping cart." */
   readonly toast: Locator;
 
+  /**
+   * Builds the locators once; Playwright locators are lazy, so nothing is looked up until a step uses them.
+   */
   constructor(page: Page) {
     super(page);
     this.name = page.getByTestId('product-name');
@@ -27,17 +30,20 @@ export class ProductPage extends BasePage {
     this.toast = page.getByRole('alert');
   }
 
+  /** Opens a product by id and waits until it can be added to the cart. */
   @step('Open product page {0}')
   async open(productId: string): Promise<void> {
     await this.page.goto(`/product/${productId}`);
     await expect(this.addToCartButton).toBeVisible();
   }
 
+  /** Types the quantity into the quantity field. */
   @step('Set the quantity to {0}')
   async setQuantity(quantity: number): Promise<void> {
     await this.quantityInput.fill(String(quantity));
   }
 
+  /** Adds the product and waits for the shop's confirmation toast. */
   @step('Add the product to the cart')
   async addToCart(): Promise<void> {
     await this.addToCartButton.click();
@@ -45,10 +51,12 @@ export class ProductPage extends BasePage {
     await expect(this.toast).toContainText('Product added to shopping cart');
   }
 
+  /** The unit price in cents. */
   async getUnitPriceInCents(): Promise<number> {
     return toCents(await this.unitPrice.innerText());
   }
 
+  /** Checks a product URL is open and the page shows this product's name. */
   @step('Check the product page shows "{0}"')
   async expectOpenFor(productName: string): Promise<void> {
     await expect(this.page).toHaveURL(/\/product\/\w+/);

@@ -5,6 +5,7 @@ export type SortDirection = 'asc' | 'desc';
  * Strings are compared like a shop sorts names: case-insensitive, locale-aware.
  */
 export function isSorted<T extends string | number>(values: readonly T[], direction: SortDirection): boolean {
+  /** Negative, zero or positive like a sort comparator: strings by locale, numbers by value. */
   const compare = (a: T, b: T): number =>
     typeof a === 'string' && typeof b === 'string'
       ? a.localeCompare(b, 'en', { sensitivity: 'base' })
