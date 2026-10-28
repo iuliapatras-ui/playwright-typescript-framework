@@ -169,7 +169,11 @@ snapshots, network and console) and a page snapshot (`error-context.md`). On a r
 3. **report**: merges the blob reports into one HTML report for all four projects (artifact `playwright-report`).
 
 On CI there are 2 retries, 2 workers per job, and `forbidOnly`, so a forgotten `test.only` fails the build. Each test
-job also uploads its JUnit XML (`junit-<project>`), which [Automation Coverage & Quality Intelligence](https://github.com/niranjankagri/automation-coverage-quality-intelligence) collects.
+job also uploads its JUnit XML (`junit-<project>`) and Playwright's JSON report (`playwright-json-<project>`), which
+[Automation Coverage & Quality Intelligence](https://github.com/niranjankagri/automation-coverage-quality-intelligence) collects. The JSON keeps every
+retry attempt: JUnit records a test that passed on a retry as plain passed, so flaky tests are only visible there.
+
+Dependabot proposes dependency and GitHub Actions updates once a month (minor and patch updates grouped, major versions as separate pull requests).
 
 `main` is protected by a ruleset: every change goes through a pull request, and the CI jobs above must pass before it is merged.
 
@@ -186,6 +190,12 @@ job also uploads its JUnit XML (`junit-<project>`), which [Automation Coverage &
   [`skipIfBotCheck()`](src/utils/botCheck.ts) waits for the account page or the check page and, on the check page,
   marks the two form-login tests as **skipped with that reason**. They run in full locally. On CI the login is still
   covered: the redirect is checked before the skip, the API tests log in, and the checkout tests log in through the API.
+- The checkout test was flaky in CI (3 of 12 runs, passed on retry): the page stayed on "Payment was successful".
+  The trace showed why: `POST /invoices` answered **422** "The city does not belong to the selected country" for the
+  same valid address (1010 Vienna, Austria) that the retry ordered successfully, and the page shows no error. That is
+  the shared demo rejecting a valid order, so the test is not changed to get around it;
+  [`payWith()`](src/pages/CheckoutPage.ts) now waits for that response and fails with the shop's own reason instead
+  of a 10 s wait for a confirmation that never comes.
 - Recording a video of every test (`retain-on-failure`) cost about 25 s per test locally, which the trace showed as
   teardown time; `on-first-retry` keeps video for the runs that need it.
 
