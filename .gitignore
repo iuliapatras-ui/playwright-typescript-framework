@@ -12,3 +12,5 @@ blob-report/
 # IDE settings
 .idea/
 .vscode/
+
+CLAUDE.local.md
