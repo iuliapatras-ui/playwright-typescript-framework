@@ -41,14 +41,12 @@ Config overrides: `BASE_URL`, `API_URL` via env vars or a local `.env` (copy `.e
 - Use `import type` for type-only imports (`consistent-type-imports`). Unused params are prefixed with `_`.
 - `playwright/expect-expect` treats `expect*`, `.expectX()`, `addToCart`, `payWith`, `getCartLines` as assertions; update
   `eslint.config.mjs` if a new page-object method is the only assertion in a test.
-- TypeScript is pinned to 6.0 because typescript-eslint doesn't support the TS 7 native compiler. `tsc` is only for type
-  checking; Playwright compiles the tests itself.
+- TypeScript is pinned to 6.0.3 in package.json; don't upgrade it to TS 7 until typescript-eslint supports the TS 7 native compiler. `tsc` only type-checks (`noEmit`); Playwright compiles the tests itself.
 - Workers: 4 locally, 2 on CI (the demo rate-limits). CI (`.github/workflows/ci.yml`, also nightly to catch demo drift):
-  `npm run check` job first, then one job per project with 2 retries, `forbidOnly`, blob + JUnit reporters, then a merged
+  `npm run check` job first, then one job per project with 2 retries, `forbidOnly`, and github + list + blob + JUnit + JSON reporters, then a merged
   HTML report. Video is `on-first-retry` on purpose (`retain-on-failure` added ~25 s per test).
-- `main` is protected: changes go through PRs and CI must pass.
 
   ## Rules
   - Ask before editing any file in tests/.
-  - Run `npm run test:api` after any change to API code.
-  - Never commit .env files or credentials.
+  - After changing any file in `src/api/`, `tests/api/`, or the `apiRequest`/`authApi`/`productsApi`/`cartsApi`/`testUser` fixtures in `src/fixtures/test.ts`, run `npm run test:api` and report the result.
+  - Don't commit `.env` or credentials: put local overrides in `.env` (gitignored, copied from `.env.example`) and get accounts from the `testUser` fixture instead of writing emails or passwords into code.
