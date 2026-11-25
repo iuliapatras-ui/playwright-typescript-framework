@@ -50,3 +50,4 @@ Config overrides: `BASE_URL`, `API_URL` via env vars or a local `.env` (copy `.e
   - Ask before editing any file in tests/.
   - After changing any file in `src/api/`, `tests/api/`, or the `apiRequest`/`authApi`/`productsApi`/`cartsApi`/`testUser` fixtures in `src/fixtures/test.ts`, run `npm run test:api` and report the result.
   - Don't commit `.env` or credentials: put local overrides in `.env` (gitignored, copied from `.env.example`) and get accounts from the `testUser` fixture instead of writing emails or passwords into code.
+  - Commit directly to main in this fork; create a branch only when I ask for one.
